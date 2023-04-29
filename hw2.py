@@ -313,7 +313,7 @@ class DecisionNode:
         # Finding best feature and his group.
         for feature_i in range(0, num_of_features):
             # Current feature split and impurity
-            feature_i_goodness, groups_i = goodness_of_split(self.data, feature_i, impurity_func)
+            feature_i_goodness, groups_i = goodness_of_split(self.data, feature_i, impurity_func, self.gain_ratio)
             if feature_i_goodness > best_feature_goodness:
                 best_groups = groups_i
                 best_feature_i = feature_i
