@@ -65,6 +65,72 @@ chi_table = {1: {0.5: 0.45,
                   0.0001: 100000}}
 
 
+def get_column(data, column_index):
+    """
+    Get the 'i' column from the dataset.
+ 
+    Input:
+    - data: any dataset.
+ 
+    Returns:
+    - column: The 'i' column.
+    """
+    ###########################################################################
+    # Implemention of the function.                                           #
+    ###########################################################################
+    column = data[ : , column_index]
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
+    return column
+
+def feature_attributes_and_occurrences(data, feature = -1):
+    """
+    Get the occurrences of each of the attribute of the feature from the dataset column.
+ 
+    Input:
+    - data: Any dataset.
+    - feature: The column (feature) index to work on.
+ 
+    Returns:
+    - value_occur_dict: A dict with a attribite value and his occurences.
+    """
+    ###########################################################################
+    # Implemention of the function.                                           #
+    ###########################################################################
+    class_column = get_column(data, feature)
+    attributes = np.unique(class_column)
+    value_occur_dict = {attribute: [index for index, value in enumerate(class_column) if value == attribute] 
+                        for attribute in attributes}
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
+    return value_occur_dict
+
+def filter_data_for_features_attribute(data, attribute_value, attribute_index):
+    """
+    Count the occurrences of each of the attribute values from the dataset column.
+ 
+    Input:
+    - data: Any dataset.
+    - attribute_value: The attribute value to filter by.
+    - attribute_index: The attribute value to filter by.
+ 
+    Returns:
+    - filter_data: A new data containing only the filtered rows.
+    """
+    ###########################################################################
+    # Implemention of the function.                                           #
+    ###########################################################################
+
+    counter = feature_attributes_and_occurrences(data, attribute_index)
+
+    filter_data = data[counter.get(attribute_value), :]
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
+    return filter_data
+
 def calc_gini(data):
     """
     Calculate gini impurity measure of a dataset.
@@ -77,23 +143,20 @@ def calc_gini(data):
     """
     gini = 0.0
     ###########################################################################
-    data_class = data[:, -1]  # class column
-    label_count = data.shape[0]
-    labels_uniq = np.unique(data[:, -1])
-    # number of appearances for each class
-    labels_dict = {classifier: np.count_nonzero(data_class == classifier) for classifier in labels_uniq}
-    squared_sum = 0
-    for divider in labels_dict.values():
-        squared_sum += divider ** 2
-
-    gini = 1 - (1 / label_count ** 2) * squared_sum
-    # TODO: Implement the function.                                           #
+    # Implemention of the function.                                           #
     ###########################################################################
+    num_of_instances = data.shape[0]
+
+    gini = 1
+    
+    counter = feature_attributes_and_occurrences(data)
+    
+    for attribute_value in counter:
+        gini -= (len(counter.get(attribute_value)) / num_of_instances) ** 2
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return gini
-
 
 def calc_entropy(data):
     """
@@ -107,20 +170,19 @@ def calc_entropy(data):
     """
     entropy = 0.0
     ###########################################################################
-    data_class = data[:, -1]  # class column
-    label_count = data.shape[0]
-    labels_uniq = np.unique(data[:, -1])
-    # number of appearances for each class
-    labels_dict = {classifier: np.count_nonzero(data_class == classifier) for classifier in labels_uniq}
-    log_sum = 0
-    for divider in labels_dict.values():
-        entropy -= (divider / label_count) * np.log2(divider / label_count)
-
+    # Implemention of the function.                                           #
+    ###########################################################################
+    num_of_instances = data.shape[0]
+    
+    counter = feature_attributes_and_occurrences(data)
+    
+    for attribute_value in counter:
+        attribute_part = (len(counter.get(attribute_value)) / num_of_instances)
+        entropy -= attribute_part * np.log2(attribute_part)
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return entropy
-
 
 def goodness_of_split(data, feature, impurity_func, gain_ratio=False):
     """
@@ -138,31 +200,31 @@ def goodness_of_split(data, feature, impurity_func, gain_ratio=False):
               according to the feature values.
     """
     goodness = 0
-    groups = {}
+    groups = {} # groups[feature_value] = data_subset
     ###########################################################################
-    goodness = impurity_func(data)
-    label_count = data.shape[0]
-    # for gain ratio
-    split_information = 0
-    # constructing the grouping by feature
-    for instance in data:
-        feature_value = instance[feature]
-        if feature_value not in groups:
-            groups[feature_value] = instance
-        else:
-            groups[feature_value].append(instance)
-
-    for spliter in groups.keys():
-        num_of_sub_group = len(groups[spliter])
-        sub_data = data[data[:, feature] == spliter]
-        goodness -= (1 / label_count) * num_of_sub_group * impurity_func(sub_data)
-        split_information -= (1 / label_count) * num_of_sub_group * np.log2(num_of_sub_group / label_count)
+    # Implement the function.                                                 #
+    ###########################################################################
+    
     if gain_ratio:
-        goodness /= split_information
-        return goodness, groups
-        # TODO: Implement the function.                                           #
-    ###########################################################################
+        impurity_func = calc_entropy
 
+    goodness = impurity_func(data)
+    counter = feature_attributes_and_occurrences(data, feature)
+
+    split_in_info = 0
+
+    for attribute in counter:
+        filtered_data = filter_data_for_features_attribute(data, attribute, feature)
+        groups[attribute] = filtered_data
+        goodness -= len(filtered_data) / data.shape[0] * impurity_func(filtered_data)
+
+        # Some calculations in case that gain_ratio flag is on.
+        part_of_data = len(filtered_data) / data.shape[0]
+        split_in_info -= part_of_data * np.log2(part_of_data)
+    
+    if gain_ratio:
+        goodness = goodness / split_in_info
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -192,13 +254,13 @@ class DecisionNode:
         """
         pred = None
         ###########################################################################
-
-        # labels_count = Counter(self.data[:, -1])
-
-        # pred = max(labels_count, key=labels_count.get)
-
-        # TODO: Implement the function.                                           #
+        # Implement the function.                                                 #
         ###########################################################################
+
+        labels_count = Counter(self.data[:, -1])
+
+        pred = max(labels_count, key=labels_count.get)
+        
         ###########################################################################
         #                             END OF YOUR CODE                            #
         ###########################################################################
@@ -229,6 +291,10 @@ class DecisionNode:
         This function has no return value
         """
         ###########################################################################
+        # Implement the function chi sqaure.                                           #
+        ###########################################################################
+
+        
         if self.depth == self.max_depth:
             self.terminal = True
             return
@@ -260,11 +326,9 @@ class DecisionNode:
                                       gain_ratio=self.gain_ratio)
             self.add_child(child_node, classifier)
 
-            # TODO: Implement the function chi sqaure.                                           #
-            ###########################################################################
-            ###########################################################################
-            #                             END OF YOUR CODE                            #
-            ###########################################################################
+        ###########################################################################
+        #                             END OF YOUR CODE                            #
+        ###########################################################################
 
 
 def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
@@ -283,6 +347,9 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     """
     root = DecisionNode(data, feature=-1, depth=0, chi=chi, max_depth=max_depth, gain_ratio=gain_ratio)
     ###########################################################################
+    # TODO: Implement the function.                                           #
+    ###########################################################################
+    
     node_queue = [root]
     while len(node_queue) > 0:
         temp_node = node_queue.pop(0)
@@ -290,8 +357,6 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
         if not temp_node.terminal:
             node_queue.extend(temp_node.children)
 
-    # TODO: Implement the function.                                           #
-    ###########################################################################
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
