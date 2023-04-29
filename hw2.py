@@ -227,7 +227,7 @@ def goodness_of_split(data, feature, impurity_func, gain_ratio=False):
         part_of_data = len(filtered_data) / data.shape[0]
         split_in_info -= part_of_data * np.log2(part_of_data)
 
-    if gain_ratio:
+    if gain_ratio and split_in_info != 0:
         goodness = goodness / split_in_info
 
     ###########################################################################
@@ -319,18 +319,15 @@ class DecisionNode:
                 best_feature_i = feature_i
                 best_feature_goodness = feature_i_goodness
 
-        # debug:
-        print(best_feature_i)
-
         # Updating the data
         #if self.copute_chi< chi_table:
 
 
-        #self.feature = best_feature_i
+        self.feature = best_feature_i
 
-        # adding children nodes according to best attribute
+        # Adding children nodes according to best attribute
         for classifier, sub_data in best_groups.items():
-            child_node = DecisionNode(data=sub_data, depth=self.depth + 1, chi=self.chi, feature=self.feature,
+            child_node = DecisionNode(data=sub_data, feature=self.feature, depth=self.depth + 1, chi=self.chi,
                                       max_depth=self.max_depth,
                                       gain_ratio=self.gain_ratio)
             self.add_child(child_node, classifier)
@@ -359,17 +356,21 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     # Implement the function.                                                 #
     ###########################################################################
 
-    node_queue = [root]
-    while len(node_queue) > 0:
-        temp_node = node_queue.pop(0)
-        temp_node.split(impurity)
-        if not temp_node.terminal:
-            node_queue.extend(temp_node.children)
+    build_sub_tree(root, impurity)
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return root
+
+def build_sub_tree(node, impurity):
+    """
+    """
+    if impurity(node.data) != 0:
+        node.split(impurity)
+        if not node.terminal:
+            for child_node in node.children:
+                build_sub_tree(child_node, impurity)
 
 
 def predict(root, instance):
