@@ -291,26 +291,29 @@ class DecisionNode:
         This function has no return value
         """
         ###########################################################################
-        # Implement the function chi sqaure.                                           #
+        # Implement the function.                                                 #
         ###########################################################################
 
-        
+        # Checks if we reach the max depth.
         if self.depth == self.max_depth:
             self.terminal = True
             return
 
         num_of_features = self.data.shape[1] - 1
-        # dict holder for best feature split
+        # Dict holder for best feature split
         best_groups = {}
         best_feature_i = 0
         best_feature_goodness = 1
+
+        # Finding best feature and his group.
         for feature_i in range(0, num_of_features):
-            # current feature split and impurity
+            # Current feature split and impurity
             feature_i_goodness, groups_i = goodness_of_split(self.data, feature_i, impurity_func)
             if feature_i_goodness < best_feature_goodness:
                 best_groups = groups_i
                 best_feature_i = feature_i_goodness
-        # updating the data
+        
+        # Updating the data
         chi_square_val = 10000000000000000000
         degree_of_freedom = len(best_groups.keys()) - 1
         ## if chi_square_val < chi_table.get(degree_of_freedom).get(self.chi) and self.chi < 1:
@@ -376,18 +379,20 @@ def predict(root, instance):
     """
     pred = None
     ###########################################################################
+    # Implement the function.                                                 #
+    ###########################################################################
+
     temp_node = root
+
     while not temp_node.terminal:
-        # finding the correct node for the instance
+
+        # Finding the correct node for the instance
         if instance[temp_node.feature] in temp_node.children_values:
             temp_node = temp_node.children[temp_node.children_values.index(instance[temp_node.feature])]
         else:
             break
 
     pred = temp_node.pred
-
-    # TODO: Implement the function.                                           #
-    ###########################################################################
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
@@ -408,13 +413,15 @@ def calc_accuracy(node, dataset):
     accuracy = 0
     count_correct = 0
     ###########################################################################
+    # Implement the function.                                                 #
+    ###########################################################################
+
     for instance in dataset:
         if predict(node, instance) == instance[-1]:
             count_correct += 1
+
     accuracy = count_correct / dataset.shape[0] * 100
 
-    # TODO: Implement the function.                                           #
-    ###########################################################################
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -436,10 +443,13 @@ def depth_pruning(X_train, X_test):
     training = []
     testing = []
     ###########################################################################
-    # TODO: Implement the function.                                           #
+    # Implement the function.                                                 #
     ###########################################################################
+
     for max_depth in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
         tree = build_tree(X_train, impurity=calc_entropy, gain_ratio=True, max_depth=max_depth)
+        # TODO!
+    
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -465,9 +475,9 @@ def chi_pruning(X_train, X_test):
     chi_testing_acc = []
     depth = []
     ###########################################################################
-    # TODO: Implement the function.                                           #
+    # Implement the function.                                                 #
     ###########################################################################
-    pass
+    # TODO!!!
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -485,14 +495,17 @@ def count_nodes(node):
     """
     n_nodes = None
     ###########################################################################
+    # Implement the function.                                                 #
+    ###########################################################################
+
     if not node.children:
         return 1
+    
     n_nodes = 1
-    for child in node.children:
-        n_nodes += child.count_nodes
 
-    # TODO: Implement the function.                                           #
-    ###########################################################################
+    for child in node.children:
+        n_nodes += count_nodes(child)
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
