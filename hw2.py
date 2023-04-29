@@ -308,19 +308,22 @@ class DecisionNode:
         # Dict holder for best feature split
         best_groups = {}
         best_feature_i = 0
-        best_feature_goodness = 1
+        best_feature_goodness = -1
 
         # Finding best feature and his group.
         for feature_i in range(0, num_of_features):
             # Current feature split and impurity
             feature_i_goodness, groups_i = goodness_of_split(self.data, feature_i, impurity_func)
-            if feature_i_goodness < best_feature_goodness:
+            if feature_i_goodness > best_feature_goodness:
                 best_groups = groups_i
                 best_feature_i = feature_i
                 best_feature_goodness = feature_i_goodness
 
+        # debug:
+        print(best_feature_i)
+
         # Updating the data
-       #if self.copute_chi< chi_table:
+        #if self.copute_chi< chi_table:
 
 
         #self.feature = best_feature_i
