@@ -316,11 +316,11 @@ class DecisionNode:
                     best_feature_i = feature_i
                     best_feature_goodness = feature_i_goodness
 
-        # Updating the data
-
-       ## if chi_compute(self) > chi_table[self.chi]:
-         ##   self.terminal = True
-           ## return
+        # Check the chi
+        cur_chi, deg_of_freedom = chi_compute(self);
+        if self.chi < 1 and cur_chi > chi_table.get(deg_of_freedom).get(self.chi):
+            self.terminal = True
+            return
 
         self.feature = best_feature_i
 
@@ -365,12 +365,27 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
 
 def build_sub_tree(node, impurity):
     """
+    Build a tree using the given impurity measure and training dataset where
+    the root is the given node.
+
+    Input:
+    - node: the root.
+    - impurity: the chosen impurity measure. Notice that you can send a function
+                as an argument in python.
+
+    Output: This function has no return value.
     """
+    ###########################################################################
+    # Implement the function.                                                 #
+    ###########################################################################
     if impurity(node.data) != 0:
         node.split(impurity)
         if not node.terminal:
             for child_node in node.children:
                 build_sub_tree(child_node, impurity)
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
 
 
 def predict(root, instance):
@@ -458,8 +473,6 @@ def depth_pruning(X_train, X_test):
         testing.append(calc_accuracy(tree, X_test))
         training.append(calc_accuracy(tree, X_train))
 
-        # TODO!
-
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
@@ -467,17 +480,25 @@ def depth_pruning(X_train, X_test):
 
 
 def chi_compute(node):
+    """
+    """
     chi_square = 0
+    ###########################################################################
+    # Implement the function.                                                 #
+    ###########################################################################
     label_occur = feature_attributes_and_occurrences(node.data, -1)
-    labels_prob = {label: (occur / node.data.shape[0]) for label, occur in label_occur.items()}
+    labels_prob = {label: (len(occur) / node.data.shape[0]) for label, occur in label_occur.items()}
     feature_label = feature_attributes_and_occurrences(node.data, node.feature)
     deg_of_freedom = len(feature_label.keys())
     for feature_value, value_count in feature_label.items():
-        for class_value, class_probability in labels_prob:
-            expected = value_count * class_probability
-            observed = np.sum((node[:, node.data.feature] == feature_value) & (node.data[:, -1] == class_value))
+        for class_value, class_probability in labels_prob.items():
+            expected = len(value_count) * class_probability
+            observed = np.sum((node.data[:, node.feature] == feature_value) & (node.data[:, -1] == class_value))
             chi_square += (observed - expected) ** 2 / expected
-    return chi_square
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
+    return chi_square, deg_of_freedom
 
 
 def chi_pruning(X_train, X_test):
@@ -501,7 +522,7 @@ def chi_pruning(X_train, X_test):
     ###########################################################################
     # Implement the function.                                                 #
     ###########################################################################
-    # TODO!!!
+
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
