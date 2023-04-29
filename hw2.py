@@ -481,6 +481,7 @@ def depth_pruning(X_train, X_test):
 
 def chi_compute(node):
     """
+        Calculate chi of given node.
     """
     chi_square = 0
     ###########################################################################
@@ -522,12 +523,42 @@ def chi_pruning(X_train, X_test):
     ###########################################################################
     # Implement the function.                                                 #
     ###########################################################################
+    for chi_i in [1 , 0.5, 0.25, 0.1, 0.05, 0.0001]:
+        # entropy and gain ratio
+        chi_i_tree = build_tree(data=X_train, impurity=calc_entropy, gain_ratio=True, chi=chi_i)
+        chi_training_acc.append(calc_accuracy(chi_i_tree, X_train))
+        chi_testing_acc.append(calc_accuracy(chi_i_tree, X_test))
 
+        depth.append(tree_depth(chi_i_tree))
+        
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return chi_training_acc, chi_testing_acc, depth
 
+def tree_depth(node):
+    """
+        Calculate tree depth (recur).
+    """
+    ###########################################################################
+    # Implement the function.                                                 #
+    ###########################################################################
+    if node.terminal:
+        return 1
+    
+    depth = 0
+
+    for child in node.children:
+        child_depth = tree_depth(child)
+        if child_depth > depth:
+            depth = child_depth
+    
+    depth += 1
+
+    ###########################################################################
+    #                             END OF YOUR CODE                            #
+    ###########################################################################
+    return depth
 
 def count_nodes(node):
     """
