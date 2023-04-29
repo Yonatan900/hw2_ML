@@ -280,10 +280,6 @@ class DecisionNode:
         self.children.append(node)
         self.children_values.append(val)
 
-    def chi_compute(self):
-        chi_val = 0
-        return chi_val
-
     def split(self, impurity_func):
         """
         Splits the current node according to the impurity_func. This function finds
@@ -321,8 +317,10 @@ class DecisionNode:
                     best_feature_goodness = feature_i_goodness
 
         # Updating the data
-        #if self.copute_chi< chi_table:
 
+       ## if chi_compute(self) > chi_table[self.chi]:
+         ##   self.terminal = True
+           ## return
 
         self.feature = best_feature_i
 
@@ -363,6 +361,7 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return root
+
 
 def build_sub_tree(node, impurity):
     """
@@ -456,12 +455,29 @@ def depth_pruning(X_train, X_test):
 
     for max_depth in [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]:
         tree = build_tree(X_train, impurity=calc_entropy, gain_ratio=True, max_depth=max_depth)
+        testing.append(calc_accuracy(tree, X_test))
+        training.append(calc_accuracy(tree, X_train))
+
         # TODO!
 
     ###########################################################################
     #                             END OF YOUR CODE                            #
     ###########################################################################
     return training, testing
+
+
+def chi_compute(node):
+    chi_square = 0
+    label_occur = feature_attributes_and_occurrences(node.data, -1)
+    labels_prob = {label: (occur / node.data.shape[0]) for label, occur in label_occur.items()}
+    feature_label = feature_attributes_and_occurrences(node.data, node.feature)
+    deg_of_freedom = len(feature_label.keys())
+    for feature_value, value_count in feature_label.items():
+        for class_value, class_probability in labels_prob:
+            expected = value_count * class_probability
+            observed = np.sum((node[:, node.data.feature] == feature_value) & (node.data[:, -1] == class_value))
+            chi_square += (observed - expected) ** 2 / expected
+    return chi_square
 
 
 def chi_pruning(X_train, X_test):
