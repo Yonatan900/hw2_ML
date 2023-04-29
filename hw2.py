@@ -353,7 +353,7 @@ def build_tree(data, impurity, gain_ratio=False, chi=1, max_depth=1000):
     """
     root = DecisionNode(data, feature=-1, depth=0, chi=chi, max_depth=max_depth, gain_ratio=gain_ratio)
     ###########################################################################
-    # TODO: Implement the function.                                           #
+    # Implement the function.                                                 #
     ###########################################################################
 
     node_queue = [root]
